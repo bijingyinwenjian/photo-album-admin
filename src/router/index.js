@@ -105,6 +105,33 @@ export const asyncRouterMap = [
       }
     ]
   },
+  {
+    path:'/album',
+    component: Layout,
+    redirect: '/album/category',
+    name: 'album',
+    meta: {title: '相册', icon: 'album'},
+    children: [
+      {
+        path: 'category',
+        name: 'category',
+        component: () => import('@/views/album/category/index'),
+        meta: {title: '类型列表', icon: 'album-category'}
+      },
+      {
+        path: 'image',
+        name: 'image',
+        component: () => import('@/views/album/image/index'),
+        meta: {title: '相册列表', icon: 'album-image'}
+      },
+      {
+        path: 'recycle',
+        name: 'recycle',
+        component: () => import('@/views/album/recycle/index'),
+        meta: {title: '回收站', icon: 'album-recycle'}
+      }
+    ]
+  },
   {path: '*', redirect: '/404', hidden: true}
 ]
 
