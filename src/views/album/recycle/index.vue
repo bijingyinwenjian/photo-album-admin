@@ -1,5 +1,12 @@
 <template> 
   <div class="app-container">
+
+    <el-button type="success" round @click="revertFile">
+            还原文件<i class="el-icon-refresh-left"/>
+        </el-button>
+        <el-button type="danger" round @click="deleteFile">
+            清空回收站<i class="el-icon-delete el-icon--right"/>
+        </el-button>
     <el-card class="filter-container" shadow="never">
       <div>
         <i class="el-icon-search"></i>
@@ -20,42 +27,63 @@
       </div>
       <div style="margin-top: 15px">
         <el-form :inline="true" :model="listQuery" size="small" label-width="140px">
-          <el-form-item label="输入搜索：">
-            <el-input v-model="listQuery.keyword" class="input-width" placeholder="类型名称" clearable></el-input>
+          <el-form-item label="类型搜索：">
+            <el-select v-model="listQuery.categoryId" placeholder="请选择">
+              <el-option
+                v-for="item in categoryList"
+                :key="item.id"
+                :label="item.categoryName"
+                :value="item.id">
+              </el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="照片名称搜索：">
+            <el-input v-model="listQuery.imageName" class="input-width" placeholder="照片名称名称" clearable></el-input>
           </el-form-item>
         </el-form>
       </div>
     </el-card>
-    <el-card class="operate-container" shadow="never">
-      <i class="el-icon-tickets"></i>
-      <span>数据列表</span>
-      <el-button size="mini" class="btn-add" @click="handleAdd()" style="margin-left: 20px">添加</el-button>
-    </el-card>
     <div class="table-container">
       <el-table ref="adminTable"
+                tooltip-effect="dark"
                 :data="list"
                 style="width: 100%;"
-                v-loading="listLoading" border>
-        <el-table-column label="编号" width="100" align="center">
-          <template slot-scope="scope">{{scope.row.id}}</template>
+                v-loading="listLoading" 
+                @selection-change="handleSelectionChange"
+                border>
+          <el-table-column
+          type="selection"
+          width="55">
         </el-table-column>
         <el-table-column label="名称" align="center">
-          <template slot-scope="scope">{{scope.row.username}}</template>
+          <template slot-scope="scope">
+            <div @click="clickFilename(scope.row)" class="file-name-content">
+              <i style="margin-right: 15px; font-size: 20px; cursor: pointer;"/>
+                <span style="cursor:pointer;">{{ scope.row.imageName }}</span>
+            </div>
+           </template>
         </el-table-column>
-        <el-table-column label="添加时间" width="160" align="center">
+        <el-table-column label="类型" align="center">
+          <template slot-scope="scope">{{scope.row.categoryName}}</template>
+        </el-table-column>
+        <el-table-column label="上传者" width="100" align="center">
+          <template slot-scope="scope">{{scope.row.uploadName}}</template>
+        </el-table-column>
+        <el-table-column label="创建时间" width="160" align="center">
           <template slot-scope="scope">{{scope.row.createTime | formatDateTime}}</template>
         </el-table-column>
-        <el-table-column label="操作" width="180" align="center">
+        <el-table-column label="描述" width="100" align="center">
+          <template slot-scope="scope">{{scope.row.remark}}</template>
+        </el-table-column>
+        <el-table-column label="是否审核" width="140" align="center">
           <template slot-scope="scope">
-            <el-button size="mini"
-                       type="text"
-                       @click="handleUpdate(scope.$index, scope.row)">
-              编辑
-            </el-button>
-            <el-button size="mini"
-                       type="text"
-                       @click="handleDelete(scope.$index, scope.row)">删除
-            </el-button>
+            <el-switch
+              @change="handleStatusChange(scope.$index, scope.row)"
+              :disabled="true"
+              :active-value="1"
+              :inactive-value="0"
+              v-model="scope.row.status">
+            </el-switch>
           </template>
         </el-table-column>
       </el-table>
@@ -72,84 +100,61 @@
         :total="total">
       </el-pagination>
     </div>
-    <el-dialog
-      :title="isEdit?'编辑用户':'添加用户'"
-      :visible.sync="dialogVisible"
-      width="40%">
-      <el-form :model="admin"
-               ref="adminForm"
-               label-width="150px" size="small">
-        <el-form-item label="帐号：">
-          <el-input v-model="admin.username" style="width: 250px"></el-input>
-        </el-form-item>
-        <el-form-item label="姓名：">
-          <el-input v-model="admin.nickName" style="width: 250px"></el-input>
-        </el-form-item>
-        <el-form-item label="邮箱：">
-          <el-input v-model="admin.email" style="width: 250px"></el-input>
-        </el-form-item>
-        <el-form-item label="密码：">
-          <el-input v-model="admin.password"  type="password" style="width: 250px"></el-input>
-        </el-form-item>
-        <el-form-item label="备注：">
-          <el-input v-model="admin.note"
-                    type="textarea"
-                    :rows="5"
-                    style="width: 250px"></el-input>
-        </el-form-item>
-        <el-form-item label="是否启用：">
-          <el-radio-group v-model="admin.status">
-            <el-radio :label="1">是</el-radio>
-            <el-radio :label="0">否</el-radio>
-          </el-radio-group>
-        </el-form-item>
-      </el-form>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="dialogVisible = false" size="small">取 消</el-button>
-        <el-button type="primary" @click="handleDialogConfirm()" size="small">确 定</el-button>
-      </span>
-    </el-dialog>
+              <el-image-viewer
+                class="el-image-viewer"
+                v-if="showImage"
+                :on-close="closeShowViewer"
+                :url-list="srcList"/>
   </div>
 </template>
 <script>
-  import {fetchList,createAdmin,updateAdmin,updateStatus,deleteAdmin,getRoleByAdmin,allocRole} from '@/api/login';
-  import {fetchAllRoleList} from '@/api/role';
+  import {fetchAllCategoryList,fetchRecycleList,revertDelete,recycleDelete} from '@/api/image';
   import {formatDate} from '@/utils/date';
+  import { getToken } from '@/utils/auth';
+  import ElImageViewer from 'element-ui/packages/image/src/image-viewer';
 
   const defaultListQuery = {
     pageNum: 1,
     pageSize: 10,
-    keyword: null
+    iamgeName: '',
+    categoryId: '',
   };
-  const defaultAdmin = {
+  const defaultImage = {
     id: null,
-    username: null,
-    password: null,
-    nickName: null,
-    email: null,
-    note: null,
-    status: 1
+    categoryId: null,
+    imageName: null,
+    storePath: null,
+    suffix: null,
+    uploadId: null,
+    uploadName: null,
+    createTime: null,
+    remark: null,
+    status: null,
+    isDeleted: null,
   };
   export default {
-    name: 'adminList',
+    name: 'recycleList',
+    components: {ElImageViewer},
     data() {
       return {
+        showImage: false,
+        srcList: [],
+        token: getToken(),
+        uploadDialogVisible: false,
         listQuery: Object.assign({}, defaultListQuery),
         list: null,
         total: null,
         listLoading: false,
         dialogVisible: false,
-        admin: Object.assign({}, defaultAdmin),
+        image: Object.assign({}, defaultImage),
         isEdit: false,
-        allocDialogVisible: false,
-        allocRoleIds:[],
-        allRoleList:[],
-        allocAdminId:null
+        multipleSelection: [],
+        categoryList: [],
       }
     },
     created() {
       this.getList();
-      this.getAllRoleList();
+      this.getCategoryList();
     },
     filters: {
       formatDateTime(time) {
@@ -161,6 +166,44 @@
       }
     },
     methods: {
+      revertFile(){
+        var ids = this.multipleSelection.map(it => it.id)
+        console.log(ids);
+        this.$confirm('是否要还原照片?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          revertDelete(ids).then(response => {
+            this.$message({
+              type: 'success',
+              message: '还原成功!'
+            });
+            this.getList();
+          });
+        });
+      },
+      deleteFile(){
+        this.$confirm('是否要彻底删除照片?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          recycleDelete().then(response => {
+            this.$message({
+              type: 'success',
+              message: '删除成功!'
+            });
+            this.getList();
+          });
+        });
+      },
+      handleSelectionChange(val) {
+        this.multipleSelection = val;
+      },
+      closeShowViewer() {
+        this.showImage = false
+      },
       handleResetSearch() {
         this.listQuery = Object.assign({}, defaultListQuery);
       },
@@ -177,125 +220,19 @@
         this.listQuery.pageNum = val;
         this.getList();
       },
-      handleAdd() {
-        this.dialogVisible = true;
-        this.isEdit = false;
-        this.admin = Object.assign({},defaultAdmin);
-      },
-      handleStatusChange(index, row) {
-        this.$confirm('是否要修改该状态?', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }).then(() => {
-          updateStatus(row.id, {status: row.status}).then(response => {
-            this.$message({
-              type: 'success',
-              message: '修改成功!'
-            });
-          });
-        }).catch(() => {
-          this.$message({
-            type: 'info',
-            message: '取消修改'
-          });
-          this.getList();
-        });
-      },
-      handleDelete(index, row) {
-        this.$confirm('是否要删除该用户?', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }).then(() => {
-          deleteAdmin(row.id).then(response => {
-            this.$message({
-              type: 'success',
-              message: '删除成功!'
-            });
-            this.getList();
-          });
-        });
-      },
-      handleUpdate(index, row) {
-        this.dialogVisible = true;
-        this.isEdit = true;
-        this.admin = Object.assign({},row);
-      },
-      handleDialogConfirm() {
-        this.$confirm('是否要确认?', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }).then(() => {
-          if (this.isEdit) {
-            updateAdmin(this.admin.id,this.admin).then(response => {
-              this.$message({
-                message: '修改成功！',
-                type: 'success'
-              });
-              this.dialogVisible =false;
-              this.getList();
-            })
-          } else {
-            createAdmin(this.admin).then(response => {
-              this.$message({
-                message: '添加成功！',
-                type: 'success'
-              });
-              this.dialogVisible =false;
-              this.getList();
-            })
-          }
-        })
-      },
-      handleAllocDialogConfirm(){
-        this.$confirm('是否要确认?', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }).then(() => {
-          let params = new URLSearchParams();
-          params.append("adminId", this.allocAdminId);
-          params.append("roleIds", this.allocRoleIds);
-          allocRole(params).then(response => {
-            this.$message({
-              message: '分配成功！',
-              type: 'success'
-            });
-            this.allocDialogVisible = false;
-          })
-        })
-      },
-      handleSelectRole(index,row){
-        this.allocAdminId = row.id;
-        this.allocDialogVisible = true;
-        this.getRoleListByAdmin(row.id);
-      },
       getList() {
         this.listLoading = true;
-        fetchList(this.listQuery).then(response => {
+        fetchRecycleList(this.listQuery).then(response => {
           this.listLoading = false;
           this.list = response.data.list;
           this.total = response.data.total;
         });
       },
-      getAllRoleList() {
-        fetchAllRoleList().then(response => {
-          this.allRoleList = response.data;
-        });
+      getCategoryList(){
+        fetchAllCategoryList().then(response => {
+          this.categoryList = response.data
+        })
       },
-      getRoleListByAdmin(adminId) {
-        getRoleByAdmin(adminId).then(response => {
-          let allocRoleList = response.data;
-          this.allocRoleIds=[];
-          if(allocRoleList!=null&&allocRoleList.length>0){
-            for(let i=0;i<allocRoleList.length;i++){
-              this.allocRoleIds.push(allocRoleList[i].id);
-            }
-          }
-        });
-      }
     }
   }
 </script>

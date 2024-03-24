@@ -42,6 +42,9 @@
         <el-table-column label="名称" align="center">
           <template slot-scope="scope">{{scope.row.categoryName}}</template>
         </el-table-column>
+        <el-table-column label="创建人" align="center">
+          <template slot-scope="scope">{{scope.row.createName}}</template>
+        </el-table-column>
         <el-table-column label="添加时间" width="160" align="center">
           <template slot-scope="scope">{{scope.row.createTime | formatDateTime}}</template>
         </el-table-column>
@@ -103,6 +106,7 @@
     id: null,
     categoryName: null,
     createTime: null,
+    createName: null,
   };
   export default {
     name: 'categoryList',
