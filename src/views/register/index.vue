@@ -37,10 +37,8 @@
           </el-input>
         </el-form-item>
         <el-form-item style="margin-bottom: 60px;text-align: center">
-          <el-button style="width: 45%" type="primary" :loading="loading" @click.native.prevent="handleLogin">
-            登录
-          </el-button>
-          <el-button style="width: 45%" type="primary" @click.native.prevent="handleTry">
+
+          <el-button style="width: 45%" center type="primary" @click.native.prevent="handleTry">
             注册
           </el-button>
         </el-form-item>
@@ -69,9 +67,10 @@
   import {isvalidUsername} from '@/utils/validate';
   import {setSupport,getSupport,setCookie,getCookie} from '@/utils/support';
   import login_center_bg from '@/assets/images/login_center_bg.png'
+  import {createAdmin} from '@/api/login.js'
 
   export default {
-    name: 'login',
+    name: 'register',
     data() {
       const validateUsername = (rule, value, callback) => {
         if (!isvalidUsername(value)) {
@@ -145,8 +144,17 @@
         })
       },
       handleTry(){
-        console.log(this.$router)
-        this.$router.push('/register')
+        this.$refs.loginForm.validate(valid => {
+            this.loading = true;
+            console.log(this.loginForm);
+            createAdmin(this.loginForm).then(response => {
+              this.$message({
+                message: '注册成功！',
+                type: 'success'
+              });
+              this.$router.push({path:"/login"})
+            })
+        })
       },
       dialogConfirm(){
         this.dialogVisible =false;
