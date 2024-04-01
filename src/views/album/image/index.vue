@@ -95,6 +95,11 @@
                        @click="handleUpdate(scope.$index, scope.row)">
               编辑
             </el-button>
+            <el-button size="primary"
+                       type="text"
+                       @click="handleShare(scope.$index, scope.row)">
+              分享
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -171,6 +176,37 @@
                 v-if="showImage"
                 :on-close="closeShowViewer"
                 :url-list="srcList"/>
+
+                <el-dialog
+                :title="shareTitle"
+                :visible.sync="shareDialogVisible"
+                @closed="resetForm('shareForm')"
+                width="80%"
+                :append-to-body=true
+                :modal-append-to-body=false
+                :center=true>
+            <div>
+                <div>
+                    <el-form label-width="100px"
+                             status-icon
+                             @submit.native.prevent>
+                        <el-form-item label="分享链接" prop="shareUrl">
+                            <el-link :underline=false type="primary"><span>{{ shareResultForm.shareUrl }}</span>
+                            </el-link>
+                        </el-form-item>
+                          <div style="display: flex; float: right;">
+                              <el-button type="primary" class="share-result-copy-button" @click="copy">
+                                  点击复制<i class="el-icon-document-copy el-icon--right"></i>
+                              </el-button>
+                        </div>
+                    </el-form>
+                </div>
+            </div>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="shareDialogVisible = false">取 消</el-button>
+                <el-button type="primary" @click="shareDialogVisible = false" :loading="loading">确 定</el-button>
+            </span>
+        </el-dialog>
   </div>
 </template>
 <script>
@@ -223,6 +259,21 @@
         isEdit: false,
         multipleSelection: [],
         categoryList: [],
+        shareDialogVisible: false,
+        loading: false,
+        step: 1,
+        shareFileForm: {
+            shareName: '',
+        },
+        shareFileRules: {
+            shareName: [
+                {required: true, message: '请输入分享名称', trigger: 'blur'}
+            ]
+        },
+        shareTitle: '',
+        shareResultForm: {
+            shareUrl: '',
+        }
       }
     },
     created() {
@@ -239,6 +290,22 @@
       }
     },
     methods: {
+      resetForm(refName) {
+          this.shareTitle = ''
+          this.shareResultForm = {
+              shareUrl: '',
+              shareCode: ''
+          }
+      },
+      copy(){
+        let shareMessage = this.shareResultForm.shareUrl
+        this.$copyText(shareMessage)
+        this.$message.success('复制成功')
+      },
+      handleShare(index, row){
+        this.shareDialogVisible = true
+        this.shareResultForm.shareUrl = row.storePath
+      },
       deleteFile(){
         var ids = this.multipleSelection.map(it => it.id)
         console.log(ids);
