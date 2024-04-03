@@ -14,6 +14,9 @@
           </el-dropdown-item>
         </router-link>
         <el-dropdown-item divided>
+          <span @click="goCenter" style="display:block;">个人中心</span>
+        </el-dropdown-item>
+        <el-dropdown-item divided>
           <span @click="resetPassword" style="display:block;">修改密码</span>
         </el-dropdown-item>
         <el-dropdown-item divided>
@@ -116,6 +119,9 @@ export default {
       this.$store.dispatch('LogOut').then(() => {
         location.reload() // 为了重新实例化vue-router对象 避免bug
       })
+    },
+    goCenter(){
+      this.$router.push({path:'/center/center'})
     },
     resetPassword(){
       this.dialogVisible = true

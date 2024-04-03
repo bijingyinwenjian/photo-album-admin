@@ -87,3 +87,18 @@ export function updatePassword(data) {
     data: data
   })
 }
+
+export function getAdminInfo() {
+  return request({
+    url: '/admin/getInfo',
+    method: 'get'
+  })
+}
+
+export function upload(data) {
+  return request({
+    url: '/admin/upload',
+    method: 'post',
+    data: data
+  })
+}

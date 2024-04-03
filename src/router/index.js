@@ -21,6 +21,7 @@ import Layout from '../views/layout/Layout'
 export const constantRouterMap = [
   {path: '/login', component: () => import('@/views/login/index'), hidden: true},
   {path: '/register', component: () => import('@/views/register/index'), hidden: true},
+  {path: '/center', component: () => import('@/views/center/index'), hidden: true},
   {path: '/404', component: () => import('@/views/404'), hidden: true},
   {
     path: '',
@@ -32,7 +33,8 @@ export const constantRouterMap = [
       name: 'home',
       component: () => import('@/views/home/index'),
       meta: {title: '仪表盘', icon: 'dashboard'}
-    }
+    },
+
     ]
   }
 ]
@@ -103,13 +105,29 @@ export const asyncRouterMap = [
         component: () => import('@/views/sys/resource/categoryList'),
         meta: {title: '资源分类'},
         hidden: true
-      }
+      },
+    ]
+  },
+  {
+    path:'/center',
+    component: Layout,
+    name: 'center',
+    meta: {title: '个人中心', icon: 'center'},
+    hidden:true,
+    children: [
+      {
+        path: 'center',
+        name: 'center',
+        component: () => import('@/views/center/index'),
+        meta: {title: 'center'},
+        hidden:true
+      },
     ]
   },
   {
     path:'/album',
     component: Layout,
-    redirect: '/album/category',
+    redirect: '/album/image',
     name: 'album',
     meta: {title: '相册', icon: 'album'},
     children: [
