@@ -78,3 +78,12 @@ export function allocRole(data) {
     data: data
   })
 }
+
+
+export function updatePassword(data) {
+  return request({
+    url: '/admin/updatePassword',
+    method: 'post',
+    data: data
+  })
+}

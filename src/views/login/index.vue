@@ -145,7 +145,6 @@
         })
       },
       handleTry(){
-        console.log(this.$router)
         this.$router.push('/register')
       },
       dialogConfirm(){
