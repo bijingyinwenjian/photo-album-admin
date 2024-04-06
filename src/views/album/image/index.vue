@@ -71,13 +71,13 @@
         <el-table-column label="上传者" width="100" align="center">
           <template slot-scope="scope">{{scope.row.uploadName}}</template>
         </el-table-column>
-        <el-table-column label="创建时间" width="160" align="center">
+        <el-table-column label="创建时间" width="120" align="center">
           <template slot-scope="scope">{{scope.row.createTime | formatDateTime}}</template>
         </el-table-column>
-        <el-table-column label="描述" width="100" align="center">
+        <el-table-column label="自动识别分类结果" width="200" align="center">
           <template slot-scope="scope">{{scope.row.remark}}</template>
         </el-table-column>
-        <el-table-column label="是否审核" width="140" align="center">
+        <el-table-column label="是否审核" width="100" align="center">
           <template slot-scope="scope">
             <el-switch
               @change="handleStatusChange(scope.$index, scope.row)"
@@ -135,12 +135,12 @@
               </el-option>
             </el-select>
           </el-form-item>
-        <el-form-item label="备注：">
+        <!-- <el-form-item label="备注：">
           <el-input v-model="image.remark"
                     type="textarea"
                     :rows="5"
                     style="width: 250px"></el-input>
-        </el-form-item>
+        </el-form-item> -->
       </el-form>
       <span slot="footer" class="dialog-footer">
         <el-button @click="dialogVisible = false" size="small">取 消</el-button>
